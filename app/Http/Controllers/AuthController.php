@@ -225,7 +225,7 @@ class AuthController extends Controller
                 $forgetpassword = Forget_Password::create([
                     'email' => $request->email,
                     "otp" => $otp,
-                    "status"=>false,
+                    "status" => false,
                     'created_at' => now(),
                 ]);
                 DB::commit();
@@ -265,40 +265,40 @@ class AuthController extends Controller
 
             ]);
 
-            Log::info("Request body",[
-                 'email' => $request->email,
+            Log::info("Request body", [
+                'email' => $request->email,
                 'otp' => $request->otp,
                 'password' => $request->password,
             ]);
             // $count=0;
-            
+
 
             $data = Forget_Password::where('email', $request->email)
                 ->where('otp', $request->otp)->first();
-                if($data->status==true){
-                    return response()->json([
-                        "message"=>"the otp has been already used",
-                        "status"=>"false"
-                    ]);
-                }
+            if ($data->status == true) {
+                return response()->json([
+                    "message" => "the otp has been already used",
+                    "status" => "false"
+                ]);
+            }
 
 
             if ($data) {
-                $data->status=true;
+                $data->status = true;
                 $data->save();
                 $now = Carbon::now();
                 $otpCreatedTime = $data->created_at;
 
                 $diffInMinutes = $now->diffInMinutes($otpCreatedTime);
 
-                if ($diffInMinutes > 5 ) {
+                if ($diffInMinutes > 5) {
                     return response()->json(['message' => 'OTP expired. Please request a new one.'], 400);
                 } else {
-                  $user= Registration::where('email', $request->email)->first();
-                  $user->password=Hash::make($request->password);
-                  $user->save();
-                
-                DB::commit();
+                    $user = Registration::where('email', $request->email)->first();
+                    $user->password = Hash::make($request->password);
+                    $user->save();
+
+                    DB::commit();
                     return response()->json([
                         "message" => "password reset successfully",
                         "status" => "true"
@@ -322,6 +322,38 @@ class AuthController extends Controller
 
 
 
+
+    }
+
+    public function changepassword(Request $request)
+    {
+        try {
+
+            DB::beginTransaction();
+            $userdata = auth()->user();
+
+            if (hash::check($request->password, $userdata->password))
+            {
+                $userdata->password = Hash::make($request->new_password);
+                $userdata->save();
+                DB::commit();
+                return response()->json([
+                    "message" => "The password change successfully",
+                    "status" => "true"
+                ], 201);
+
+            }
+            return response()->json([
+                "message" => "The old password incorrect",
+                "status" => "false"
+            ], 201);
+
+
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(["error" => $e->getMessage()], 500);
+        }
 
     }
 

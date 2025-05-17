@@ -25,6 +25,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'maxton-auth'], function ($rout
     Route::post("/login", [AuthController::class, 'login'])->name('login');   
     Route::get("/getprofile", [AuthController::class, 'getprofile']);
     Route::post("/updateoradd", [AuthController::class, 'updateOrAdd']);
+    Route::post("/changepassword", [AuthController::class, 'changepassword']);
     Route::get("/fetchAllOtherUser", [AuthController::class, 'fetchAllUser']);
 });
 
